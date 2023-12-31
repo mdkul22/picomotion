@@ -17,10 +17,24 @@ add_subdirectory(src)
 
 add_executable(main
     main.c
+    src/hw_init.c
+    src/hw_configure.c
+    src/sys_common.c
 )
 
+# enable usb output, disable uart output
+pico_enable_stdio_usb(main 1)
+pico_enable_stdio_uart(main 0)
+
+# create map/bin/hex/uf2 file etc.
+pico_add_extra_outputs(main)
+
 # Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(main pico_stdlib)
+target_link_libraries(main 
+    pico_stdlib
+    qmi8658
+    hardware_i2c
+)
 
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(main)

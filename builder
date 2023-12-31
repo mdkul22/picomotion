@@ -5,6 +5,7 @@ if [ ! -d "build" ]; then
     mkdir build
 fi
 
+export PICO_SDK_PATH="/Users/mdk/SDKs/pico-sdk"
 # Navigate to the build directory
 cd build
 
