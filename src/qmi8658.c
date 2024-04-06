@@ -9,6 +9,68 @@ status_t qmi8658_initialize() {
     qmi_config.rev_id = 0;
 }
 
+
+static status_t qmi8658_setup_ctrls() {
+    uint8_t to_write = CTRL1_INT1_EN | CTRL1_BE_EN | CTRL1_ADDR_AI_EN;
+    qmi8658_write_register(QMI_CTRL1_REG, to_write, 1);
+    to_write = CTRL2_aFS_16G | CTRL2_aST_EN | CTRL2_aODR_500;
+    qmi8658_write_register(QMI_CTRL2_REG, to_write, 1);
+    to_write = (uint8_t)CTRL3_gFS_2048 | CTRL3_gST_EN | CTRL3_gODR_500;
+    qmi8658_write_register(QMI_CTRL3_REG, to_write, 1);
+    to_write = !CTRL5_aLPF_EN | !CTRL5_gLPF_EN; 
+    qmi8658_write_register(QMI_CTRL5_REG, to_write, 1);
+    return STATUS_OK;
+}
+
+static status_t qmi8658_setup_accelerometer() {
+
+}
+
+static status_t qmi8658_setup_gyroscope() {
+
+}
+
+void qmi8658_read_xyz_raw(short raw_acc_xyz[3], short raw_gyro_xyz[3], unsigned int *tim_count)
+{
+	unsigned char buf_reg[12];
+
+	if (tim_count)
+	{
+		unsigned char buf[3];
+		unsigned int timestamp;
+		qmi8658_read_register(QMI_TS_L_REG, buf, 3); // 0x18	24
+		timestamp = (unsigned int)(((unsigned int)buf[2] << 16) | ((unsigned int)buf[1] << 8) | buf[0]);
+        static int imu_timestamp = 0;
+		if (timestamp > imu_timestamp)
+			imu_timestamp = timestamp;
+		else
+			imu_timestamp = (timestamp + 0x1000000 - imu_timestamp);
+
+		*tim_count = imu_timestamp;
+	}
+	qmi8658_read_register(QMI_AX_L_REG, buf_reg, 12); // 0x19, 25
+
+	raw_acc_xyz[0] = (short)((unsigned short)(buf_reg[1] << 8) | (buf_reg[0]));
+	raw_acc_xyz[1] = (short)((unsigned short)(buf_reg[3] << 8) | (buf_reg[2]));
+	raw_acc_xyz[2] = (short)((unsigned short)(buf_reg[5] << 8) | (buf_reg[4]));
+
+	raw_gyro_xyz[0] = (short)((unsigned short)(buf_reg[7] << 8) | (buf_reg[6]));
+	raw_gyro_xyz[1] = (short)((unsigned short)(buf_reg[9] << 8) | (buf_reg[8]));
+	raw_gyro_xyz[2] = (short)((unsigned short)(buf_reg[11] << 8) | (buf_reg[10]));
+}
+
+status_t qmi8658_enable_imu() {
+    uint8_t to_write = CTRL7_GYRO_EN | CTRL7_ACCEL_EN;
+    qmi8658_write_register(QMI_CTRL7_REG, to_write, 1);
+
+}
+
+status_t qmi8658_disable_imu() {
+    uint8_t to_write = !CTRL7_GYRO_EN | !CTRL7_ACCEL_EN;
+    qmi8658_write_register(QMI_CTRL7_REG, to_write, 1);
+
+}
+
 status_t qmi8658_configure() {
     status_t status = qmi8658_verify_chip();
     handle_status(status, "rev_id: 0x%x", qmi_config.rev_id);
