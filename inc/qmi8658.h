@@ -40,8 +40,10 @@ enum __QMI8658Registers {
 };
 
 enum __QMI8658RegisterActions {
-    CTRL1_INT2_EN       =   5 << 1,
-    CTRL1_INT1_EN       =   6 << 1,
+    CTRL1_BE_EN         =   5 << 1,
+    CTRL1_ADDR_AI_EN    =   6 << 1,
+    CTRL1_INT2_EN       =   4 << 1,
+    CTRL1_INT1_EN       =   3 << 1,
     CTRL2_aST_EN        =   7 << 1, // accel self test enable
     CTRL2_aFS_2G        =   4 << 0b000,
     CTRL2_aFS_4G        =   4 << 0b001,
@@ -86,6 +88,9 @@ typedef struct _QMI8658Config {
 
 status_t qmi8658_initialize();
 status_t qmi8658_configure();
+status_t qmi8658_enable_imu();
+status_t qmi8658_disable_imu();
+void qmi8658_read_xyz_raw(short raw_acc_xyz[3], short raw_gyro_xyz[3], unsigned int *tim_count);
 status_t qmi8658_verify_chip();
 status_t qmi8658_write_register(uint8_t reg, uint8_t data, uint8_t len);
 status_t qmi8658_read_register(uint8_t reg, uint8_t* data, uint8_t len);
