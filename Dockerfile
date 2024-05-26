@@ -30,16 +30,7 @@ RUN git clone -b main https://@github.com/mdkul22/picomotion.git
 WORKDIR /opt/picomotion
 
 # Create a build directory
-RUN mkdir build
-
-# Set the working directory to the build directory
-WORKDIR /opt/picomotion/build
-
-# Configure the project
-RUN cmake ..
-
-# Build the project
-RUN make -j$(nproc)
+RUN mkdir build && cd build && cmake .. && make -j$(nproc) 
 
 FROM ubuntu:20.04
 
