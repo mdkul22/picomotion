@@ -23,7 +23,6 @@ void gprintf(print_type_e type, const char *format, ...) {
     }
     vprintf(format, args);
     va_end(args);
-    printf("\n");
 }
 
 /*

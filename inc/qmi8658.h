@@ -135,10 +135,21 @@ enum __QMIC7RegisterActions {
     QMIC7_DEFAULT = 0x03,
 };
 
+typedef struct _qmi_imu_pkt {
+  int16_t rx;
+  int16_t ry;
+  int16_t rz;
+  float x;
+  float y;
+  float z;
+} imu_pkt_t;
+
 typedef struct _QMI8658State {
     bool chip_verified;
     uint8_t rev_id;
     uint64_t imu_timestamp;
+    imu_pkt_t accl;
+    imu_pkt_t gyro;
 } qmi8658_state_t;
 
 status_t qmi8658_initialize();
