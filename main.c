@@ -7,10 +7,9 @@
 int main() {
     stdio_init_all();
     configure_hardware();
-    qmi8658_configure();
     int16_t raw_accel[3];
     int16_t raw_gyro[3];
-    uint32_t time_count;
+    uint64_t time_count;
     while (true) {
         gprintf(DEBUG, "Hello, world!");
         /* move qmi init and configure to configure hardware */

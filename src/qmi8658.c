@@ -1,50 +1,63 @@
 #include "qmi8658.h"
 #include "hardware/i2c.h"
 #include "sys_common.h"
+#include <assert.h>
 
-static qmi8658_config_t qmi_config;
+static qmi8658_state_t qmi_state;
+
+static status_t _setup_interface();
+static status_t _setup_accel();
+static status_t _setup_gyro();
+static status_t _setup_lpfs();
+static status_t _setup_attitude_engine();
 
 status_t qmi8658_initialize() {
-    qmi_config.chip_verified = false;
-    qmi_config.rev_id = 0;
+    qmi_state.chip_verified = false;
+    qmi_state.rev_id = 0;
+    qmi_state.imu_timestamp = 0;
 }
 
 
-static status_t qmi8658_setup_ctrls() {
+static status_t _setup_interface() {
     qmi8658_write_register(QMI_CTRL1_REG, QMIC1_DEFAULT, 1);
-    qmi8658_write_register(QMI_CTRL2_REG, QMIC2_DEFAULT, 1);
-    qmi8658_write_register(QMI_CTRL3_REG, QMIC3_DEFAULT, 1);
-    qmi8658_write_register(QMI_CTRL5_REG, QMIC5_DEFAULT, 1);
-    qmi8658_write_register(QMI_CTRL6_REG, QMIC6_DEFAULT, 1);
-    qmi8658_write_register(QMI_CTRL7_REG, QMIC7_DEFAULT, 1);
     return STATUS_OK;
 }
 
-static status_t qmi8658_setup_accelerometer() {
-
+static status_t _setup_accel() {
+    qmi8658_write_register(QMI_CTRL2_REG, QMIC2_DEFAULT, 1);
+    return STATUS_OK;
 }
 
-static status_t qmi8658_setup_gyroscope() {
-
+static status_t _setup_gyro() {
+    qmi8658_write_register(QMI_CTRL3_REG, QMIC3_DEFAULT, 1);
+    return STATUS_OK;
 }
 
-void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3], unsigned int *tim_count)
+static status_t _setup_lpfs() {
+    qmi8658_write_register(QMI_CTRL5_REG, QMIC5_DEFAULT, 1);
+    return STATUS_OK;
+}
+
+static status_t _setup_attitude_engine() {
+    qmi8658_write_register(QMI_CTRL6_REG, QMIC6_DEFAULT, 1);
+    return STATUS_OK;
+}
+
+void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3], uint64_t *ts)
 {
 	unsigned char buf_reg[12];
-
-	if (tim_count)
+	if (ts)
 	{
 		uint8_t buf[3];
 		uint64_t timestamp;
 		qmi8658_read_nregisters(QMI_TS_L_REG, buf, 3); // 0x18	24
 		timestamp = (unsigned int)(((unsigned int)buf[2] << 16) | ((unsigned int)buf[1] << 8) | buf[0]);
-    static uint64_t imu_timestamp = 0;
-		if (timestamp > imu_timestamp)
-			imu_timestamp = timestamp;
+		if (timestamp > qmi_state.imu_timestamp)
+			qmi_state.imu_timestamp = timestamp;
 		else
-			imu_timestamp = (timestamp + 0x1000000 - imu_timestamp);
+			qmi_state.imu_timestamp = (timestamp + 0x1000000 - qmi_state.imu_timestamp);
 
-		*tim_count = imu_timestamp;
+		*ts = qmi_state.imu_timestamp;
 	}
 	qmi8658_read_nregisters(QMI_AX_L_REG, buf_reg, 12); // 0x19, 25
 
@@ -70,32 +83,23 @@ status_t qmi8658_disable_imu() {
 }
 
 status_t qmi8658_configure() {
-    status_t status = qmi8658_verify_chip();
-    handle_status(status, "rev_id: 0x%x\n", qmi_config.rev_id);
-    if (status == STATUS_OK) {
-        gprintf(DEBUG, "verified! rev_id: 0x%x", qmi_config.rev_id);
-    }
-    qmi8658_setup_ctrls();
-    qmi8658_enable_imu();
-    return status;
+    assert(qmi8658_verify_chip() == STATUS_OK);
+    assert(_setup_interface() == STATUS_OK);
+    assert(_setup_accel() == STATUS_OK);
+    assert(_setup_gyro() == STATUS_OK);
+    assert(_setup_lpfs() == STATUS_OK);
+    assert(_setup_attitude_engine() == STATUS_OK);
+    return STATUS_OK;
 }
 
 status_t qmi8658_verify_chip() {
     uint8_t buf[2] = {0};
-    status_t status = STATUS_OK;
-    status = qmi8658_read_register(QMI_WHOAMI_REG, (uint16_t*) &buf);
-    gprintf(DEBUG, "status %d, whoami: 0x%x, revid: 0x%x", status, buf[0], buf[1]);
-    if (status != STATUS_OK) {
-        goto error;
-    }
-    if (buf[0] != 0x05) {
-        gprintf(ERROR, "whoami: 0x%x ", buf[0]);
-        status = STATUS_QMI_CHIP_NOT_VERIFIED;
-        goto error;
-    }
-    qmi_config.chip_verified = true;
-    error:
-      return status;
+    qmi8658_read_register(QMI_WHOAMI_REG, (uint16_t*) &buf);
+    // gprintf(DEBUG, "whoami: 0x%x, revid: 0x%x", buf[0], buf[1]);
+    assert(buf[0] == 0x7b);
+    qmi_state.chip_verified = true;
+    qmi_state.rev_id = buf[1];
+    return STATUS_OK;
 }
 
 status_t qmi8658_write_register(uint8_t reg, uint8_t data, uint8_t len) {

@@ -7,6 +7,7 @@
 #define QMI8658_I2C_ADDR 0x6b
 #define QMI_I2C_PORT i2c1
 
+// Register addresses
 enum __QMI8658Registers {
     QMI_WHOAMI_REG = 0x00,
     QMI_CTRL1_REG = 0x02,
@@ -39,14 +40,16 @@ enum __QMI8658Registers {
     QMI_GZ_H_REG = 0x40,
 };
 
+// SPI Interface and Sensor Enable
 enum __QMICTRL1RegisterActions {
     QMIC1_SENSOR_DISABLE = 1 << 0,
     QMIC1_SPI_BE_EN = 1 << 5, // big endian enable
-    QMIC1_AI_EN = 1 << 6, // auto increment enable 
+    QMIC1_AI_EN = 1 << 6,     // auto increment enable
     QMIC1_SIM3_EN = 1 << 7,
-    QMIC1_DEFAULT = 0b01100000,
+    QMIC1_DEFAULT = 0x60, // big endian + auto increment enable
 };
 
+// Accelerometer output data rate, full scale, self test
 enum __QMICTRL2RegisterActions {
     QMIC2_ACCEL_ST_EN = 1 << 7,
     QMIC2_ACCEL_FS_2G = 0 << 6,
@@ -66,9 +69,10 @@ enum __QMICTRL2RegisterActions {
     QMIC2_ACCEL_ODR_21HZ_LP = 13 << 3,
     QMIC2_ACCEL_ODR_11HZ_LP = 14 << 3,
     QMIC2_ACCEL_ODR_3HZ_LP = 15 << 3,
-    QMIC2_DEFAULT = 0x23,
+    QMIC2_DEFAULT = 0x33, // ±16 g 1kHz ODR accel
 };
 
+// Gyroscope output data rate, full scale, self test
 enum __QMICTRL3RegisterActions {
     QMIC3_GYRO_ST_EN = 1 << 7,
     QMIC3_GYRO_FS_16DPS = 0b000 << 6,
@@ -88,9 +92,10 @@ enum __QMICTRL3RegisterActions {
     QMIC3_GYRO_ODR_125HZ = 6 << 3,
     QMIC3_GYRO_ODR_62HZ = 7 << 3,
     QMIC3_GYRO_ODR_31HZ = 8 << 3,
-    QMIC3_DEFAULT = 0x53,
+    QMIC3_DEFAULT = 0x63, // ±1024 dps 1kHz ODR
 };
 
+// IMU LPF setup
 enum __QMICTRL5RegisterActions {
     QMIC5_GYRO_LPF_MODE_0 = 0 << 6,
     QMIC5_GYRO_LPF_MODE_1 = 1 << 6,
@@ -102,46 +107,49 @@ enum __QMICTRL5RegisterActions {
     QMIC5_ACCL_LPF_MODE_2 = 2 << 2,
     QMIC5_ACCL_LPF_MODE_3 = 3 << 2,
     QMIC5_ACCL_LPF_ENABLE = 1,
-    QMIC5_DEFAULT = 0x11,
+    QMIC5_DEFAULT = 0x11, // enable both LPFs of BW of 2.62% of ODR
 };
 
+// Attitude Engine actions
 enum __QMICTRL6RegisterActions {
-    QMIC6_SMOD_EN = 1 << 7, // requires sEN = 1
-    QMIC6_ATT_ODR_0 = 0 << 2, // 1 Hz 
-    QMIC6_ATT_ODR_1 = 1 << 2, // 1 Hz 
-    QMIC6_ATT_ODR_2 = 2 << 2, // 1 Hz 
-    QMIC6_ATT_ODR_4 = 3 << 2, // 1 Hz 
-    QMIC6_ATT_ODR_5 = 4 << 2, // 1 Hz 
-    QMIC6_ATT_ODR_6 = 5 << 2, // 1 Hz 
+    QMIC6_SMOD_EN = 1 << 7,   // requires sEN = 1
+    QMIC6_ATT_ODR_0 = 0 << 2, // 1 Hz
+    QMIC6_ATT_ODR_1 = 1 << 2, // 2 Hz
+    QMIC6_ATT_ODR_2 = 2 << 2, // 4 Hz
+    QMIC6_ATT_ODR_3 = 3 << 2, // 8 Hz
+    QMIC6_ATT_ODR_4 = 4 << 2, // 16 Hz
+    QMIC6_ATT_ODR_5 = 5 << 2, // 32 Hz
+    QMIC6_ATT_ODR_6 = 6 << 2, // 64 Hz
     QMIC6_DEFAULT = 0x00,
 };
 
+// Sensor enable + data read configure
 enum __QMIC7RegisterActions {
-    QMIC7_SS_EN = 1 << 7, // sync sample enable 
-    QMIC7_HSC_EN = 1 << 6, // high speed internal clock enable 
-    QMIC7_GYRO_SNOOZE_EN = 1 << 4, // gyro snooze mode enable 
-    QMIC7_ATT_EN = 1 << 3, // attitude engine enable 
-    QMIC7_MAG_EN = 1 << 2, // external mag enable 
-    QMIC7_GYRO_EN = 1 << 1, // gyro enable 
-    QMIC7_ACCL_EN = 1, 
+    QMIC7_SS_EN = 1 << 7,          // sync sample enable
+    QMIC7_HSC_EN = 1 << 6,         // high speed internal clock enable
+    QMIC7_GYRO_SNOOZE_EN = 1 << 4, // gyro snooze mode enable
+    QMIC7_ATT_EN = 1 << 3,         // attitude engine enable
+    QMIC7_MAG_EN = 1 << 2,         // external mag enable
+    QMIC7_GYRO_EN = 1 << 1,        // gyro enable
+    QMIC7_ACCL_EN = 1,             // accel enable
     QMIC7_DEFAULT = 0x03,
 };
 
-
-
-typedef struct _QMI8658Config {
+typedef struct _QMI8658State {
     bool chip_verified;
     uint8_t rev_id;
-} qmi8658_config_t;
+    uint64_t imu_timestamp;
+} qmi8658_state_t;
 
 status_t qmi8658_initialize();
 status_t qmi8658_configure();
 status_t qmi8658_enable_imu();
 status_t qmi8658_disable_imu();
 void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3],
-                          unsigned int *tim_count);
+                          uint64_t *ts);
 status_t qmi8658_verify_chip();
 status_t qmi8658_write_register(uint8_t reg, uint8_t data, uint8_t len);
 status_t qmi8658_read_register(uint8_t reg_addr, uint16_t *value);
-status_t qmi8658_read_nregisters(uint8_t start_addr, uint8_t *pData, uint8_t len);
+status_t qmi8658_read_nregisters(uint8_t start_addr, uint8_t *pData,
+                                 uint8_t len);
 // status_t qmi8658_write_regs();

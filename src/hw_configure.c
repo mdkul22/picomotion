@@ -1,4 +1,5 @@
 #include "hardware/gpio.h"
+#include "qmi8658.h"
 #include "sys_common.h"
 #include "hardware/i2c.h"
 #include "hw_config.h"
@@ -11,6 +12,7 @@ static status_t configure_lcd();
 
 status_t configure_hardware() {
     configure_i2c();
+    qmi8658_configure();
     return STATUS_OK;
 }
 
