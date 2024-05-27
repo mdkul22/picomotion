@@ -6,6 +6,7 @@
 
 int main() {
     stdio_init_all();
+    init_hardware();
     configure_hardware();
     int16_t raw_accel[3];
     int16_t raw_gyro[3];

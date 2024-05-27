@@ -17,7 +17,6 @@ add_subdirectory(src)
 
 add_executable(main
     main.c
-    src/hw_init.c
     src/hw_configure.c
     src/sys_common.c
 )
