@@ -1,6 +1,7 @@
 #include <assert.h>
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
+#include "interrupts.h"
 #include "hw_config.h"
 #include "qmi8658.h"
 #include "sys_common.h"
@@ -43,6 +44,7 @@ static status_t configure_i2c() {
 status_t configure_hardware() {
   assert(configure_i2c() == STATUS_OK);
   assert(qmi8658_configure() == STATUS_OK);
+  setup_interrupts();
   return STATUS_OK;
 }
 

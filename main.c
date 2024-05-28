@@ -14,10 +14,7 @@ int main() {
     gprintf(DEBUG, "\n\033[2J\n");
     while (true) {
         /* move qmi init and configure to configure hardware */
-        qmi8658_read_xyz_raw(raw_accel, raw_gyro, &time_count);
-        gprintf(DEBUG, "a: [%5d, %5d, %5d] g: [%5d, %5d, %5d], ts: %10d\r",
-                raw_accel[0], raw_accel[1], raw_accel[2], raw_gyro[0],
-                raw_gyro[1], raw_gyro[2], time_count);
+        qmi8658_print_raw();
         sleep_ms(10);
     }
     return 0;

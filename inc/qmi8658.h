@@ -1,4 +1,5 @@
 #pragma once
+#include "hardware/gpio.h"
 #include "sys_common.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -50,11 +51,11 @@ enum __QMICTRL1RegisterActions {
 
 // Accelerometer output data rate, full scale, self test
 enum __QMICTRL2RegisterActions {
-    QMIC2_ACCEL_ST_EN = 1 << 7,
+    QMIC2_ACCEL_ST_EN = 1 << 7, // self test enable
     QMIC2_ACCEL_FS_2G = 0 << 6,
     QMIC2_ACCEL_FS_4G = 1 << 6,
-    QMIC2_ACCEL_FS_8G = 0b010 << 6,
-    QMIC2_ACCEL_FS_16G = 0b011 << 6,
+    QMIC2_ACCEL_FS_8G = 2 << 6,
+    QMIC2_ACCEL_FS_16G = 3 << 6,
     QMIC2_ACCEL_ODR_8KHZ = 0 << 3,
     QMIC2_ACCEL_ODR_4KHZ = 1 << 3,
     QMIC2_ACCEL_ODR_2KHZ = 2 << 3,
@@ -68,7 +69,7 @@ enum __QMICTRL2RegisterActions {
     QMIC2_ACCEL_ODR_21HZ_LP = 13 << 3,
     QMIC2_ACCEL_ODR_11HZ_LP = 14 << 3,
     QMIC2_ACCEL_ODR_3HZ_LP = 15 << 3,
-    QMIC2_DEFAULT = 0x33, // ±16 g 1kHz ODR accel
+    QMIC2_DEFAULT = 0x64,
 };
 
 // Gyroscope output data rate, full scale, self test
@@ -91,7 +92,7 @@ enum __QMICTRL3RegisterActions {
     QMIC3_GYRO_ODR_125HZ = 6 << 3,
     QMIC3_GYRO_ODR_62HZ = 7 << 3,
     QMIC3_GYRO_ODR_31HZ = 8 << 3,
-    QMIC3_DEFAULT = 0x63, // ±1024 dps 1kHz ODR
+    QMIC3_DEFAULT = 0x64,
 };
 
 // IMU LPF setup
@@ -135,9 +136,7 @@ enum __QMIC7RegisterActions {
 };
 
 typedef struct _qmi_imu_pkt {
-  int16_t rx;
-  int16_t ry;
-  int16_t rz;
+  int16_t raw[3];
   float x;
   float y;
   float z;
@@ -155,6 +154,8 @@ status_t qmi8658_initialize();
 status_t qmi8658_configure();
 status_t qmi8658_enable_imu();
 status_t qmi8658_disable_imu();
+void qmi8658_print_raw();
+void qmi8658_interrupt_handler(uint gpio, uint32_t event_mask); // read data 
 void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3],
                           uint64_t *ts);
 status_t qmi8658_verify_chip();

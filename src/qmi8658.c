@@ -1,4 +1,5 @@
 #include "qmi8658.h"
+#include "hardware/gpio.h"
 #include "hardware/i2c.h"
 #include "sys_common.h"
 #include <assert.h>
@@ -123,4 +124,14 @@ status_t qmi8658_read_nregisters(uint8_t start_addr, uint8_t *pData,
   int8_t ret =
       i2c_read_blocking(QMI_I2C_PORT, QMI8658_I2C_ADDR, pData, len, false);
   return ret == len ? STATUS_OK : STATUS_FAIL_HW_COMM;
+}
+
+void qmi8658_print_raw() {
+    gprintf(DEBUG, "a: [%5d, %5d, %5d] g: [%5d, %5d, %5d], ts: %10d\r",
+      qmi_state.accl.raw[0], qmi_state.accl.raw[1], qmi_state.accl.raw[2], qmi_state.gyro.raw[0],
+      qmi_state.gyro.raw[1], qmi_state.gyro.raw[2], qmi_state.imu_timestamp);
+}
+
+void qmi8658_interrupt_handler(uint gpio, uint32_t event_mask) {
+  qmi8658_read_xyz_raw(qmi_state.accl.raw, qmi_state.gyro.raw, &qmi_state.imu_timestamp);
 }

@@ -19,6 +19,7 @@ add_executable(main
     main.c
     src/hw_configure.c
     src/sys_common.c
+    src/interrupts.c
 )
 
 #  enable both usb and main

@@ -54,7 +54,7 @@ cd build
 # Run CMake to configure the project
 if [[ $1 == "DEBUG" ]]; then
  echo "enabling debug flag"
- cmake -DCMAKE_BUILD_TYPE=Debug ..
+ cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
 else 
  cmake ..
 fi
