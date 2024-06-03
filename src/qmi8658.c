@@ -109,7 +109,7 @@ void qmi8658_process_raw() {
   gyro->x = ((double)gyro->raw[0]) * (1024.0/32768.0);
   gyro->y = ((double)gyro->raw[1]) * (1024.0/32768.0);
   gyro->z = ((double)gyro->raw[2]) * (1024.0/32768.0);
-  gprintf(DEBUG, "a: [ %2.3lf %2.3lf %2.3lf ] g: [ %4.3lf, %4.3lf, %4.3lf ]\r", 
+  gprintf(DEBUG, "a: [ %2.3lf %2.3lf %2.3lf ] g: [ %4.3lf, %4.3lf, %4.3lf ]\033[K\r", 
           accl->x, accl->y, accl->z, gyro->x, gyro->y, gyro->z);
 }
 
