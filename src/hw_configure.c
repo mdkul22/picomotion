@@ -1,10 +1,10 @@
-#include <assert.h>
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
-#include "interrupts.h"
 #include "hw_config.h"
+#include "interrupts.h"
 #include "qmi8658.h"
 #include "sys_common.h"
+#include <assert.h>
 
 static status_t init_i2c();
 static status_t init_lcd();
@@ -25,13 +25,13 @@ static status_t init_i2c() {
   return STATUS_OK;
 }
 
-static status_t init_imu() { 
-  assert(STATUS_OK == qmi8658_initialize()); 
+static status_t init_imu() {
+  assert(STATUS_OK == qmi8658_initialize());
   return STATUS_OK;
 }
 
-status_t init_hardware() { 
-  assert(init_i2c() == STATUS_OK); 
+status_t init_hardware() {
+  assert(init_i2c() == STATUS_OK);
   assert(init_imu() == STATUS_OK);
 }
 
@@ -47,4 +47,3 @@ status_t configure_hardware() {
   setup_interrupts();
   return STATUS_OK;
 }
-
