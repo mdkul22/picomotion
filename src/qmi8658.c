@@ -100,6 +100,19 @@ void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3],
   raw_gyro_xyz[2] = (int16_t)((uint16_t)(buf_reg[11] << 8) | (buf_reg[10]));
 }
 
+void qmi8658_process_raw() {
+  imu_pkt_t* accl = &qmi_state.accl; 
+  imu_pkt_t* gyro = &qmi_state.gyro; 
+  accl->x = ((double)accl->raw[0]) * (16.0/32768.0);
+  accl->y = ((double)accl->raw[1]) * (16.0/32768.0);
+  accl->z = ((double)accl->raw[2]) * (16.0/32768.0);
+  gyro->x = ((double)gyro->raw[0]) * (1024.0/32768.0);
+  gyro->y = ((double)gyro->raw[1]) * (1024.0/32768.0);
+  gyro->z = ((double)gyro->raw[2]) * (1024.0/32768.0);
+  gprintf(DEBUG, "a: [ %2.3lf %2.3lf %2.3lf ] g: [ %4.3lf, %4.3lf, %4.3lf ]\r", 
+          accl->x, accl->y, accl->z, gyro->x, gyro->y, gyro->z);
+}
+
 status_t qmi8658_enable_imu() {
   uint8_t to_write = QMIC7_GYRO_EN | QMIC7_ACCL_EN;
   qmi8658_write_register(QMI_CTRL7_REG, to_write, 1);

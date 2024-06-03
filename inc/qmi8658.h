@@ -139,9 +139,9 @@ enum __QMIC7RegisterActions {
 
 typedef struct _qmi_imu_pkt {
   int16_t raw[3];
-  float x;
-  float y;
-  float z;
+  double x;
+  double y;
+  double z;
 } imu_pkt_t;
 
 typedef enum _qmi_odr_config {
@@ -255,6 +255,7 @@ status_t qmi8658_configure();
 status_t qmi8658_enable_imu();
 status_t qmi8658_disable_imu();
 void qmi8658_print_raw();
+void qmi8658_process_raw();
 void qmi8658_interrupt_handler(uint gpio, uint32_t event_mask); // read data
 void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3],
                           uint64_t *ts);
