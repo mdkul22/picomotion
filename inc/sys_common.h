@@ -5,6 +5,8 @@ typedef enum _status_t {
     STATUS_FAIL_HW_COMM,
     STATUS_QMI_I2C_READ_FAIL,
     STATUS_QMI_CHIP_NOT_VERIFIED,
+    STATUS_NULL_PTR_ERROR,
+    STATUS_FAIL,
 } status_t;
 
 typedef enum _print_type_e {

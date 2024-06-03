@@ -6,7 +6,7 @@
 
 #define QMI8658_I2C_ADDR 0x6b
 #define QMI_I2C_PORT i2c1
-
+#define QMI_DEFAULT_REV_ID 0x7b
 // Register addresses
 enum __QMI8658Registers {
   QMI_WHOAMI_REG = 0x00,
@@ -43,7 +43,7 @@ enum __QMI8658Registers {
 // SPI Interface and Sensor Enable
 enum __QMICTRL1RegisterActions {
   QMIC1_SENSOR_DISABLE = 0x01,
-  QMIC1_SPI_BE_EN = 0x20, // big endian enable
+  QMIC1_SPI_BE_EN = 0x20, // SPI read big endian enable
   QMIC1_AI_EN = 0x40,     // auto increment enable
   QMIC1_SIM3_EN = 0x80,
   QMIC1_DEFAULT = QMIC1_SPI_BE_EN | QMIC1_AI_EN,
@@ -143,12 +143,105 @@ typedef struct _qmi_imu_pkt {
   float z;
 } imu_pkt_t;
 
-typedef struct _QMI8658State {
+typedef enum _qmi_odr_config {
+  QMI_ODR_8KHZ = 0,
+  QMI_ODR_4KHZ,
+  QMI_ODR_2KHZ,
+  QMI_ODR_1KHZ,
+  QMI_ODR_500HZ,
+  QMI_ODR_250HZ,
+  QMI_ODR_125HZ,
+  QMI_ODR_62HZ,
+  QMI_ODR_31HZ,
+  QMI_ODR_128HZ_LP, // illegal for gyro
+  QMI_ODR_21HZ_LP,
+  QMI_ODR_11HZ_LP,
+  QMI_ODR_3HZ_LP, 
+  QMI_ATT_ODR_1HZ, // illegal for gyro, accel
+  QMI_ATT_ODR_2HZ,
+  QMI_ATT_ODR_4HZ,
+  QMI_ATT_ODR_8HZ,
+  QMI_ATT_ODR_16HZ,
+  QMI_ATT_ODR_32HZ,
+  QMI_ATT_ODR_64HZ,
+} qmi_odr_config_e; 
+
+typedef enum _qmi_dps_config {
+  QMI_DPS_16 = 0,
+  QMI_DPS_32,
+  QMI_DPS_64,
+  QMI_DPS_128,
+  QMI_DPS_256,
+  QMI_DPS_512,
+  QMI_DPS_1024,
+  QMI_DPS_2048,
+} qmi_dps_config_e;
+
+typedef enum _qmi_g_config {
+  QMI_G_2 = 0,
+  QMI_G_4,
+  QMI_G_8,
+  QMI_G_16,
+} qmi_g_config_e;
+
+typedef struct _qmi_enabled {
+  bool is_gyro_enabled;
+  bool is_accl_enabled;
+  bool is_att_enabled;
+} qmi_enabled_t;
+
+typedef enum _qmi_lpf_state {
+  QMI_LPF_MODE_0 = 0, // 2.62% BW
+  QMI_LPF_MODE_1, // 3.59% BW
+  QMI_LPF_MODE_2, // 5.32% BW
+  QMI_LPF_MODE_3, // 14.0% BW
+} qmi_lpf_state_e;
+
+typedef enum _qmi_component_type {
+  QMI_TYPE_GYRO = 0,
+  QMI_TYPE_ACCL,
+  QMI_TYPE_ATTX, // attitude engine
+  QMI_TYPE_UNKNOWN,
+} qmi_component_type_e;
+
+// TODO: add attitude engine support
+typedef union _qmi_imu_settings {
+  qmi_dps_config_e dps_config;
+  qmi_g_config_e g_config;
+} qmi_imu_settings_u;
+
+typedef struct _qmi_component_config {
+  qmi_imu_settings_u imu_settings;
+  qmi_component_type_e type;
+  qmi_odr_config_e odr_config;
+  qmi_lpf_state_e lpf_config;
+} qmi_component_config_t;
+
+typedef struct _qmi_interface_config {
+  bool is_auto_increment;
+  bool is_sensor_clock_disabled;
+} qmi_interface_t;
+
+typedef struct _qmi_chip_info {
   bool chip_verified;
   uint8_t rev_id;
+} qmi_chip_info_t;
+
+// TODO: Add attitude config
+typedef struct _qmi_imu_config {
+  qmi_enabled_t component_switch;
+  qmi_interface_t imu_interface;
+  qmi_component_config_t gyro_config;
+  qmi_component_config_t accl_config;
+} imu_config_t;
+
+// TODO: add attitude pkt 
+typedef struct _QMI8658State {
+  qmi_chip_info_t chip_info;
   uint64_t imu_timestamp;
   imu_pkt_t accl;
   imu_pkt_t gyro;
+  imu_config_t imu_config;
 } qmi8658_state_t;
 
 status_t qmi8658_initialize();
@@ -159,7 +252,7 @@ void qmi8658_print_raw();
 void qmi8658_interrupt_handler(uint gpio, uint32_t event_mask); // read data
 void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3],
                           uint64_t *ts);
-status_t qmi8658_verify_chip();
+status_t qmi8658_verify_chip(qmi_chip_info_t* chip_info);
 status_t qmi8658_write_register(uint8_t reg, uint8_t data, uint8_t len);
 status_t qmi8658_read_register(uint8_t reg_addr, uint16_t *value);
 status_t qmi8658_read_nregisters(uint8_t start_addr, uint8_t *pData,
