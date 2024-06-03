@@ -3,6 +3,13 @@
 #include "hardware/i2c.h"
 #include "sys_common.h"
 #include <assert.h>
+#include <stdint.h>
+
+static status_t _setup_interface(qmi_interface_t *interface);
+static status_t _setup_accel(qmi_component_config_t *config);
+static status_t _setup_gyro(qmi_component_config_t *config);
+static status_t _setup_lpf(qmi_component_type_e type, qmi_lpf_config_t *lpf_config);
+static status_t _setup_attitude_engine();
 
 static qmi8658_state_t qmi_state = {
   .chip_info = {
@@ -12,10 +19,10 @@ static qmi8658_state_t qmi_state = {
   .imu_timestamp = 0,
   .accl = {0},
   .gyro = {0},
-  .imu_config = {
+  .imu_config ={
     .imu_interface = {
-      .is_auto_increment = true,
-      .is_sensor_clock_disabled = false,
+        .is_auto_increment = true,
+        .is_sensor_clock_disabled = false,
     },
     .component_switch = {
       .is_att_enabled = false,
@@ -24,15 +31,21 @@ static qmi8658_state_t qmi_state = {
     },
     .gyro_config = {
       .type = QMI_TYPE_GYRO,
-      .lpf_config = QMI_LPF_MODE_0,
+      .lpf_config = {
+        .is_lpf_enabled = true,
+        .lpf_mode = QMI_LPF_MODE_0,
+      },
       .odr_config = QMI_ODR_500HZ,
       .imu_settings = {
-        .dps_config = QMI_DPS_1024,
+          .dps_config = QMI_DPS_1024,
       },
     },
     .accl_config = {
       .type = QMI_TYPE_ACCL,
-      .lpf_config = QMI_LPF_MODE_0,
+      .lpf_config = {
+        .is_lpf_enabled = true,
+        .lpf_mode = QMI_LPF_MODE_0,
+      },
       .odr_config = QMI_ODR_500HZ,
       .imu_settings = {
         .g_config = QMI_G_16,
@@ -41,22 +54,14 @@ static qmi8658_state_t qmi_state = {
   },
 };
 
-static status_t _setup_interface(qmi_interface_t* interface);
-static status_t _setup_accel(qmi_component_config_t *config);
-static status_t _setup_gyro(qmi_component_config_t *config);
-static status_t _setup_lpf(qmi_component_type_e type, qmi_lpf_state_e lpf_mode);
-static status_t _setup_attitude_engine();
-
-/* 
+/*
  * NOTE: For now, as everything is declared within the global static config
- * it makes no sense to add anything to this initialize function. There 
- * could be a possibility to setup some malloc arrays later down the line 
- * or loading flashed values for calibration or some new feature later 
- * down the line 
+ * it makes no sense to add anything to this initialize function. There
+ * could be a possibility to setup some malloc arrays later down the line
+ * or loading flashed values for calibration or some new feature later
+ * down the line
  * */
-status_t qmi8658_initialize() {
-  return STATUS_OK;
-}
+status_t qmi8658_initialize() { return STATUS_OK; }
 
 status_t qmi8658_configure() {
   assert(qmi8658_verify_chip(&qmi_state.chip_info) == STATUS_OK);
@@ -107,12 +112,11 @@ status_t qmi8658_disable_imu() {
   qmi8658_write_register(QMI_CTRL7_REG, to_write, 1);
 }
 
-
-status_t qmi8658_verify_chip(qmi_chip_info_t* chip_info) {
+status_t qmi8658_verify_chip(qmi_chip_info_t *chip_info) {
   uint8_t buf[2] = {0};
   qmi8658_read_register(QMI_WHOAMI_REG, (uint16_t *)&buf);
   // gprintf(DEBUG, "whoami: 0x%x, revid: 0x%x", buf[0], buf[1]);
-  // TODO: Find a better recovery process when reflash does not work/ 
+  // TODO: Find a better recovery process when reflash does not work/
   // not properly read 0x7b
   assert(buf[0] == QMI_DEFAULT_REV_ID);
   chip_info->chip_verified = true;
@@ -154,7 +158,7 @@ void qmi8658_interrupt_handler(uint gpio, uint32_t event_mask) {
                        &qmi_state.imu_timestamp);
 }
 
-static status_t _setup_interface(qmi_interface_t* interface) {
+static status_t _setup_interface(qmi_interface_t *interface) {
   if (interface == NULL) {
     return STATUS_NULL_PTR_ERROR;
   }
@@ -170,7 +174,7 @@ static status_t _setup_interface(qmi_interface_t* interface) {
   return STATUS_OK;
 }
 
-static status_t _setup_accel(qmi_component_config_t* config) {
+static status_t _setup_accel(qmi_component_config_t *config) {
   if (config == NULL) {
     return STATUS_NULL_PTR_ERROR;
   }
@@ -180,7 +184,7 @@ static status_t _setup_accel(qmi_component_config_t* config) {
   uint8_t reg = 0x00;
   switch (config->imu_settings.g_config) {
     case QMI_G_2:
-      reg |= QMIC2_ACCEL_FS_2G; 
+      reg |= QMIC2_ACCEL_FS_2G;
       break;
     case QMI_G_4:
       reg |= QMIC2_ACCEL_FS_4G;
@@ -193,7 +197,8 @@ static status_t _setup_accel(qmi_component_config_t* config) {
       break;
     default:
       reg |= QMIC2_ACCEL_FS_16G;
-      gprintf(WARNING, "accel config fs out of bounds: %d, setting to 16G\n", config->imu_settings.g_config);
+      gprintf(WARNING, "accel config fs out of bounds: %d, setting to 16G\n",
+              config->imu_settings.g_config);
   }
   switch (config->odr_config) {
     case QMI_ODR_31HZ:
@@ -219,31 +224,139 @@ static status_t _setup_accel(qmi_component_config_t* config) {
       break;
     default:
       reg |= QMIC2_ACCEL_ODR_500HZ;
-      gprintf(WARNING, "accel config odr invalid: %1x, setting to 500Hz\n", config->odr_config);
+      gprintf(WARNING, "accel config odr invalid: %1x, setting to 500Hz\n",
+              config->odr_config);
   }
   // lpf is set in another register so its separate from the current reg value
-  assert(_setup_lpf(config->type, config->lpf_config) == STATUS_OK);
+  assert(_setup_lpf(config->type, &config->lpf_config) == STATUS_OK);
   qmi8658_write_register(QMI_CTRL2_REG, reg, 1);
   return STATUS_OK;
 }
 
-static status_t _setup_gyro(qmi_component_config_t* config) {
-  qmi8658_write_register(QMI_CTRL3_REG, QMIC3_DEFAULT, 1);
+static status_t _setup_gyro(qmi_component_config_t *config) {
+  if (config == NULL) {
+    return STATUS_NULL_PTR_ERROR;
+  }
+  if (config->type != QMI_TYPE_GYRO) {
+    return STATUS_FAIL;
+  }
+  uint8_t reg = 0x00;
+  switch (config->imu_settings.dps_config) {
+    case QMI_DPS_16:
+      reg |= QMIC3_GYRO_FS_16DPS;
+      break;
+    case QMI_DPS_32:
+      reg |= QMIC3_GYRO_FS_32DPS;
+      break;
+    case QMI_DPS_64:
+      reg |= QMIC3_GYRO_FS_64DPS;
+      break;
+    case QMI_DPS_128:
+      reg |= QMIC3_GYRO_FS_128DPS;
+      break;
+    case QMI_DPS_256:
+      reg |= QMIC3_GYRO_FS_256DPS; 
+      break;
+    case QMI_DPS_512:
+      reg |= QMIC3_GYRO_FS_512DPS;
+      break;
+    case QMI_DPS_1024:
+      reg |= QMIC3_GYRO_FS_1024DPS;
+      break;
+    case QMI_DPS_2048:
+      reg |= QMIC3_GYRO_FS_2048DPS;
+      break;
+    default:
+      reg |= QMIC2_ACCEL_FS_16G;
+      gprintf(WARNING, "accel config fs out of bounds: %d, setting to 16G\n",
+              config->imu_settings.g_config);
+  }
+  switch (config->odr_config) {
+    case QMI_ODR_31HZ:
+      reg |= QMIC3_GYRO_ODR_31HZ;
+      break;
+    case QMI_ODR_62HZ:
+      reg |= QMIC3_GYRO_ODR_62HZ;
+      break;
+    case QMI_ODR_500HZ:
+      reg |= QMIC3_GYRO_ODR_500HZ;
+      break;
+    case QMI_ODR_1KHZ:
+      reg |= QMIC3_GYRO_ODR_1KHZ;
+      break;
+    case QMI_ODR_2KHZ:
+      reg |= QMIC3_GYRO_ODR_2KHZ;
+      break;
+    case QMI_ODR_4KHZ:
+      reg |= QMIC3_GYRO_ODR_4KHZ;
+      break;
+    case QMI_ODR_8KHZ:
+      reg |= QMIC3_GYRO_ODR_8KHZ;
+      break;
+    default:
+      reg |= QMIC3_GYRO_ODR_500HZ;
+      gprintf(WARNING, "accel config odr invalid: %1x, setting to 500Hz\n",
+              config->odr_config);
+  }
+  // lpf is set in another register so its separate from the current reg value
+  assert(_setup_lpf(config->type, &config->lpf_config) == STATUS_OK);
+  qmi8658_write_register(QMI_CTRL3_REG, reg, 1);
   return STATUS_OK;
 }
 
-static status_t _setup_lpf(qmi_component_type_e type, qmi_lpf_state_e lpf_mode) {
-  uint8_t reg = 0x00; 
+static status_t _setup_lpf(qmi_component_type_e type,
+                           qmi_lpf_config_t *lpf_config) {
+  uint8_t data[2] = {0};
   // reading to save state
+  qmi8658_read_register(QMI_CTRL5_REG, (uint16_t *)&data);
+  uint8_t reg = data[0];
   switch (type) {
     case QMI_TYPE_ACCL:
-      break;
-    case QMI_TYPE_GYRO:
-      break;
-    default:
-      return STATUS_FAIL;
+      if (lpf_config->is_lpf_enabled) {
+        reg |= QMIC5_ACCL_LPF_ENABLE;
+        switch(lpf_config->lpf_mode) {
+          case QMI_LPF_MODE_0:
+            reg |= QMIC5_ACCL_LPF_MODE_0;
+            break;
+          case QMI_LPF_MODE_1:
+            reg |= QMIC5_ACCL_LPF_MODE_1;
+            break;
+          case QMI_LPF_MODE_2:
+            reg |= QMIC5_ACCL_LPF_MODE_2;
+            break;
+          case QMI_LPF_MODE_3:
+            reg |= QMIC5_ACCL_LPF_MODE_3;
+            break;
+          default:
+            return STATUS_FAIL;
+        }
+      }
+    break;
+  case QMI_TYPE_GYRO:
+    if (lpf_config->is_lpf_enabled) {
+      reg |= QMIC5_GYRO_LPF_ENABLE;
+      switch (lpf_config->lpf_mode) {
+        case QMI_LPF_MODE_0:
+          reg |= QMIC5_GYRO_LPF_MODE_0;
+          break;
+        case QMI_LPF_MODE_1:
+          reg |= QMIC5_GYRO_LPF_MODE_1;
+          break;
+        case QMI_LPF_MODE_2:
+          reg |= QMIC5_GYRO_LPF_MODE_2;
+          break;
+        case QMI_LPF_MODE_3:
+          reg |= QMIC5_GYRO_LPF_MODE_3;
+          break;
+        default:
+          return STATUS_FAIL;
+      }
+    }
+    break;
+  default:
+    return STATUS_FAIL;
   }
-  qmi8658_write_register(QMI_CTRL5_REG, QMIC5_DEFAULT, 1);
+  qmi8658_write_register(QMI_CTRL5_REG, reg, 1);
   return STATUS_OK;
 }
 
@@ -251,4 +364,3 @@ static status_t _setup_attitude_engine() {
   qmi8658_write_register(QMI_CTRL6_REG, QMIC6_DEFAULT, 1);
   return STATUS_OK;
 }
-

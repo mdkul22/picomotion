@@ -197,6 +197,11 @@ typedef enum _qmi_lpf_state {
   QMI_LPF_MODE_3, // 14.0% BW
 } qmi_lpf_state_e;
 
+typedef struct _qmi_lpf_config {
+  bool is_lpf_enabled;
+  qmi_lpf_state_e lpf_mode;
+} qmi_lpf_config_t;
+
 typedef enum _qmi_component_type {
   QMI_TYPE_GYRO = 0,
   QMI_TYPE_ACCL,
@@ -214,7 +219,7 @@ typedef struct _qmi_component_config {
   qmi_imu_settings_u imu_settings;
   qmi_component_type_e type;
   qmi_odr_config_e odr_config;
-  qmi_lpf_state_e lpf_config;
+  qmi_lpf_config_t lpf_config;
 } qmi_component_config_t;
 
 typedef struct _qmi_interface_config {
