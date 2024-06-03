@@ -113,14 +113,15 @@ status_t qmi8658_disable_imu() {
 }
 
 status_t qmi8658_verify_chip(qmi_chip_info_t *chip_info) {
-  uint8_t buf[2] = {0};
-  qmi8658_read_register(QMI_WHOAMI_REG, (uint16_t *)&buf);
-  // gprintf(DEBUG, "whoami: 0x%x, revid: 0x%x", buf[0], buf[1]);
+  uint8_t whoami = 0, revid = 0;
+  qmi8658_read_register(QMI_WHOAMI_REG, &whoami);
+  qmi8658_read_register(QMI_REVID_REG, &revid);
+  //gprintf(DEBUG, "whoami: 0x%x, revid: 0x%x\n", whoami, revid);
   // TODO: Find a better recovery process when reflash does not work/
   // not properly read 0x7b
-  assert(buf[0] == QMI_DEFAULT_REV_ID);
+  assert(revid == QMI_DEFAULT_REV_ID);
   chip_info->chip_verified = true;
-  chip_info->rev_id = buf[1];
+  chip_info->rev_id = revid;
   return STATUS_OK;
 }
 
@@ -129,13 +130,11 @@ status_t qmi8658_write_register(uint8_t reg, uint8_t data, uint8_t len) {
   i2c_write_blocking(QMI_I2C_PORT, QMI8658_I2C_ADDR, buf, 2, false);
 }
 
-status_t qmi8658_read_register(uint8_t reg_addr, uint16_t *value) {
-  uint8_t tmpi[2];
+status_t qmi8658_read_register(uint8_t reg_addr, uint8_t *value) {
   i2c_write_blocking(QMI_I2C_PORT, QMI8658_I2C_ADDR, &reg_addr, 1,
                      true); // true to keep master control of bus
-  int ret = i2c_read_blocking(QMI_I2C_PORT, QMI8658_I2C_ADDR, tmpi, 2, false);
-  *value = (((uint16_t)tmpi[0] << 8) | (uint16_t)tmpi[1]);
-  return (ret == 2) ? STATUS_OK : STATUS_FAIL_HW_COMM;
+  int ret = i2c_read_blocking(QMI_I2C_PORT, QMI8658_I2C_ADDR, value, 1, false);
+  return (ret == 1) ? STATUS_OK : STATUS_FAIL_HW_COMM;
 }
 
 status_t qmi8658_read_nregisters(uint8_t start_addr, uint8_t *pData,
@@ -306,10 +305,10 @@ static status_t _setup_gyro(qmi_component_config_t *config) {
 
 static status_t _setup_lpf(qmi_component_type_e type,
                            qmi_lpf_config_t *lpf_config) {
-  uint8_t data[2] = {0};
+  uint8_t data = 0;
   // reading to save state
-  qmi8658_read_register(QMI_CTRL5_REG, (uint16_t *)&data);
-  uint8_t reg = data[0];
+  qmi8658_read_register(QMI_CTRL5_REG, &data);
+  uint8_t reg = data;
   switch (type) {
     case QMI_TYPE_ACCL:
       if (lpf_config->is_lpf_enabled) {

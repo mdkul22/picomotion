@@ -10,6 +10,7 @@
 // Register addresses
 enum __QMI8658Registers {
   QMI_WHOAMI_REG = 0x00,
+  QMI_REVID_REG = 0x01,
   QMI_CTRL1_REG = 0x02,
   QMI_CTRL2_REG = 0x03,
   QMI_CTRL3_REG = 0x04,
@@ -259,7 +260,7 @@ void qmi8658_read_xyz_raw(int16_t raw_acc_xyz[3], int16_t raw_gyro_xyz[3],
                           uint64_t *ts);
 status_t qmi8658_verify_chip(qmi_chip_info_t* chip_info);
 status_t qmi8658_write_register(uint8_t reg, uint8_t data, uint8_t len);
-status_t qmi8658_read_register(uint8_t reg_addr, uint16_t *value);
+status_t qmi8658_read_register(uint8_t reg_addr, uint8_t *value);
 status_t qmi8658_read_nregisters(uint8_t start_addr, uint8_t *pData,
                                  uint8_t len);
 // status_t qmi8658_write_regs();
