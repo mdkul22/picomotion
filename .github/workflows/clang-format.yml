@@ -15,17 +15,15 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        ref: ${{ github.head_ref }}
 
     - name: Install clang-format
       run: sudo apt-get install -y clang-format
 
-    - name: Run clang-format
-      run: clang-format -i **/*.cpp **/*.h
+    - name: Run clang-format on C++ files
+      run: |
+        find . -name '*.cpp' -o -name '*.h' | xargs clang-format -i
 
     - name: Check for changes
       run: |
@@ -34,7 +32,7 @@ jobs:
         if [[ `git status --porcelain` ]]; then
           git add .
           git commit -m "Auto format code with clang-format"
-          git push
+          git push origin HEAD:${{ github.head_ref }}
         else
           echo "No formatting needed"
         fi
