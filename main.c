@@ -14,7 +14,7 @@ int main() {
     uint64_t time_count;
     while (true) {
         /* move qmi init and configure to configure hardware */
-        qmi8658_print_raw();
+        qmi8658_process_raw();
         sleep_ms(10);
     }
     return 0;

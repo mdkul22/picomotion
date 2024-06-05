@@ -3,9 +3,9 @@
 #include "sys_common.h"
 
 enum _hw_config_pins {
-    QMI_SDA_PIN     =       6,
-    QMI_SCL_PIN     =       7,
-}; 
+  QMI_SDA_PIN = 6,
+  QMI_SCL_PIN = 7,
+};
 
 status_t init_hardware();
 status_t deinit_hardware();
