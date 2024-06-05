@@ -10,27 +10,23 @@ RUN apt-get update && \
 # Set the working directory
 WORKDIR /opt
 
-# Clone the Pico SDK
-RUN git clone -b master https://github.com/raspberrypi/pico-sdk.git
-
-# Set up environment variables for the Pico SDK
-ENV PICO_SDK_PATH=/opt/pico-sdk
-
-# Export environment variables
-RUN echo "export PICO_SDK_PATH=/opt/pico-sdk" >> ~/.bashrc
-
 # Install CMake
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.19.6/cmake-3.19.6-Linux-x86_64.sh && \
     chmod +x cmake-3.19.6-Linux-x86_64.sh && \
     ./cmake-3.19.6-Linux-x86_64.sh --skip-license --prefix=/usr/local
 
 RUN git clone -b main https://@github.com/mdkul22/picomotion.git
+ENV PICO_SDK_PATH=/opt/picomotion/lib/pico-sdk
+# Export environment variables
+RUN echo "export PICO_SDK_PATH=/opt/picomotion/lib/pico-sdk" >> ~/.bashrc
 
 # Set the working directory to the example project
 WORKDIR /opt/picomotion
-
+RUN git submodule init && git submodule update --recursive
 # Create a build directory
-RUN mkdir build && cd build && cmake .. && make -j$(nproc) 
+RUN mkdir build 
+RUN cd build && cmake ..
+RUN cd build && make -j$(nproc) 
 
 FROM ubuntu:20.04
 
