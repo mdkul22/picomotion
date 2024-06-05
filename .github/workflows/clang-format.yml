@@ -1,0 +1,40 @@
+name: clang-format check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install clang-format
+      run: sudo apt-get install -y clang-format
+
+    - name: Run clang-format
+      run: clang-format -i **/*.cpp **/*.h
+
+    - name: Check for changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        if [[ `git status --porcelain` ]]; then
+          git add .
+          git commit -m "Auto format code with clang-format"
+          git push
+        else
+          echo "No formatting needed"
+        fi
