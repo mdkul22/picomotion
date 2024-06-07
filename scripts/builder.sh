@@ -65,7 +65,7 @@ cp compile_commands.json ..
 
 flash_binary() {
 # should be in build directory
-openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000" -c "program main.elf verify reset exit"
+openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000" -c "program picomotion.elf verify reset exit"
 }
 
 run_builder $@
