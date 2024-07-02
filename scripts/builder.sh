@@ -59,7 +59,7 @@ else
  cmake ..
 fi
 # Build the project
-cmake --build .
+cmake --build . --parallel 
 cp compile_commands.json ..
 }
 
