@@ -16,9 +16,9 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.19.6/cmake-3.19.6
     ./cmake-3.19.6-Linux-x86_64.sh --skip-license --prefix=/usr/local
 
 RUN git clone -b main https://@github.com/mdkul22/picomotion.git
-ENV PICO_SDK_PATH=/opt/picomotion/lib/pico-sdk
+ENV PICO_SDK_PATH=/opt/picomotion/extern/pico-sdk
 # Export environment variables
-RUN echo "export PICO_SDK_PATH=/opt/picomotion/lib/pico-sdk" >> ~/.bashrc
+RUN echo "export PICO_SDK_PATH=/opt/picomotion/extern/pico-sdk" >> ~/.bashrc
 
 # Set the working directory to the example project
 WORKDIR /opt/picomotion
