@@ -4,6 +4,8 @@
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 
+
+#define PLL_SYS_KHZ (270 * 1000)
 #define LCD_SPI_PORT    (spi1)
 
 #define LCD_DC_PIN      (8)
@@ -17,6 +19,7 @@
 #define LCD_1IN28_WIDTH 240
 
 extern dma_channel_config c;
+extern uint dma_tx;
 
 enum _hw_config_pins {
   QMI_SDA_PIN = 6,

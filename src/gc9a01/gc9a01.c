@@ -30,9 +30,9 @@ parameter:
 static void LCD_1IN28_SendCommand(uint8_t Reg)
 {
     gpio_put(LCD_DC_PIN, 0);
-    //gpio_put(LCD_CS_PIN, 0);
-    spi_write_blocking(LCD_SPI_PORT,Reg,1);
-    //gpio_put(LCD_CS_PIN, 1);
+    gpio_put(LCD_CS_PIN, 0);
+    spi_write_blocking(LCD_SPI_PORT, &Reg, 1);
+    gpio_put(LCD_CS_PIN, 1);
 }
 
 /******************************************************************************
@@ -44,7 +44,7 @@ static void LCD_1IN28_SendData_8Bit(uint8_t Data)
 {
     gpio_put(LCD_DC_PIN, 1);
     //gpio_put(LCD_CS_PIN, 0);
-    spi_write_blocking(LCD_SPI_PORT,Data,1);
+    spi_write_blocking(LCD_SPI_PORT, &Data,1);
     //gpio_put(LCD_CS_PIN, 1);
 }
 
@@ -57,8 +57,9 @@ static void LCD_1IN28_SendData_16Bit(uint16_t Data)
 {
     gpio_put(LCD_DC_PIN, 1);
     //gpio_put(LCD_CS_PIN, 0);
-    spi_write_blocking(LCD_SPI_PORT,Data >> 8,1);
-    spi_write_blocking(LCD_SPI_PORT,Data,1);
+    spi_write_blocking(LCD_SPI_PORT, (uint8_t*)&Data, 1);
+    uint8_t modData = Data >> 8; 
+    spi_write_blocking(LCD_SPI_PORT, &modData, 1);
    // gpio_put(LCD_CS_PIN, 1);
 	
 }

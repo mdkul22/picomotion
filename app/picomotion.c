@@ -9,9 +9,9 @@ int main() {
     stdio_init_all();
     gprintf(DEBUG, "\n\033[2J\n"); // CLEAR SCREEN CMD
     init_hardware();
+    configure_hardware();
     LCD_1IN28_Init(HORIZONTAL);
     LCD_1IN28_Clear(WHITE);
-    configure_hardware();
     int16_t raw_accel[3];
     int16_t raw_gyro[3];
     uint64_t time_count;
