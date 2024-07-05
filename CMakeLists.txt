@@ -12,10 +12,22 @@ project(picomotion VERSION 1.0
 pico_sdk_init()
 # rest of your project
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(LV_CONF_PATH "${CMAKE_SOURCE_DIR}/include/lv_config/lv_conf.h")
 
 add_subdirectory(src/gc9a01)
 add_subdirectory(src/qmi8658)
 add_subdirectory(src/hwconfig)
+add_subdirectory(extern/lvgl)
+add_subdirectory(src/gui)
+
+# lvgl stuff
+include_directories(
+  ${CMAKE_SOURCE_DIR}/include/lv_config
+  extern/lvgl
+  extern/lvgl/src
+)
+
+message(STATUS "Including lv_conf.h from ${LV_CONF_PATH} If there are compilation errors related to lv_conf.h, please check that this file is correctly configured according to your needs and that it is in the correct directory.")
 
 add_executable(picomotion
     app/picomotion.c
@@ -28,7 +40,9 @@ target_link_libraries(picomotion
     hardware_i2c
     hwconfig
     qmi8658
-    # gc9a01
+    lvgl
+    gc9a01
+    gui
 )
 
 #  enable both usb and main
