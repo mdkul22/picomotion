@@ -4,8 +4,14 @@
 #include "hardware/irq.h"
 #include "hw_config.h"
 #include "lvgl.h"
+#include "pico/time.h"
+#include <src/display/lv_display.h>
+#include <src/lv_init.h>
 
 static lv_display_t* display = NULL;
+static struct repeating_timer lvgl_timer;
+static lv_color_t buf1[DISP_HOR_RES * DISP_VER_RES / 2];                        /*Declare a buffer for 1/10 screen size*/
+static lv_color_t buf2[DISP_HOR_RES * DISP_VER_RES / 2];                        /*Declare a buffer for 1/10 screen size*/
 
 static void disp_flush_cb(lv_display_t*, const lv_area_t*, uint8_t*);
 static void dma_handler(void);
@@ -18,14 +24,35 @@ static void dma_handler(void)
   }
 }
 
+static bool repeating_lvgl_timer_callback(struct repeating_timer* t)
+{
+  lv_tick_inc(5);
+  return true;
+}
+
 void gui_init()
 {
+  add_repeating_timer_ms(5, repeating_lvgl_timer_callback, NULL, &lvgl_timer);
   lv_init();
   display = lv_display_create(DISP_HOR_RES, DISP_VER_RES);
+  lv_display_set_draw_buffers(display, buf1, buf2);  /*Initialize the display buffer.*/
+  lv_display_set_flush_cb(display, &disp_flush_cb);
+  /* init DMA */ 
   dma_channel_set_irq0_enabled(dma_tx, true);
   irq_set_exclusive_handler(DMA_IRQ_0, dma_handler);
   irq_set_enabled(DMA_IRQ_0, true);
-  lv_display_set_flush_cb(display, &disp_flush_cb);
+  gui_widgets_init();
+}
+
+void gui_widgets_init()
+{
+  lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0x003a57), LV_PART_MAIN);
+
+  /*Create a white label, set its text and align it to the center*/
+  lv_obj_t* label = lv_label_create(lv_screen_active());
+  lv_label_set_text(label, "Hello world");
+  lv_obj_set_style_text_color(lv_screen_active(), lv_color_hex(0xffffff), LV_PART_MAIN);
+  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 }
 
 static void disp_flush_cb(lv_display_t* disp, const lv_area_t* area, uint8_t* px_map)

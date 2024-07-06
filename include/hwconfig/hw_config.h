@@ -25,6 +25,7 @@ enum _hw_config_pins {
   QMI_SCL_PIN = 7,
 };
 
+void hw_set_pwm(uint8_t value);
 status_t init_hardware();
 status_t deinit_hardware();
 status_t configure_hardware();
