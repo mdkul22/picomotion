@@ -13,6 +13,8 @@
 #define LCD_MOSI_PIN (11)
 #define LCD_RST_PIN (12)
 #define LCD_BL_PIN (25)
+#define BAT_ADC_PIN     (29)
+#define BAR_CHANNEL     (3)
 
 #define LCD_1IN28_HEIGHT 240
 #define LCD_1IN28_WIDTH 240
