@@ -2,6 +2,7 @@
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
+#include "hardware/adc.h"
 #include "hardware/pll.h"
 #include "hardware/pwm.h"
 #include "hw_config.h"
@@ -47,6 +48,7 @@ status_t init_hardware()
 {
   assert(init_i2c() == STATUS_OK);
   assert(init_imu() == STATUS_OK);
+  return STATUS_OK;
 }
 
 static status_t configure_i2c()
@@ -58,9 +60,13 @@ static status_t configure_i2c()
 
 status_t configure_hardware()
 {
+  set_sys_clock_khz(PLL_SYS_KHZ, true);
+  clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, PLL_SYS_KHZ * 1000,
+      PLL_SYS_KHZ * 1000);
+  stdio_init_all();
+  assert(configure_lcd() == STATUS_OK);
   assert(configure_i2c() == STATUS_OK);
   assert(qmi8658_configure() == STATUS_OK);
-  assert(configure_lcd() == STATUS_OK);
   setup_interrupts();
   return STATUS_OK;
 }
@@ -74,19 +80,32 @@ static void _gpio_set_mode(uint16_t Pin, uint16_t Mode)
   }
 }
 
+void hw_set_pwm(uint8_t value)
+{
+  if (value < 0 || value > 100) {
+        return ;
+  } else {
+    pwm_set_chan_level(slice_num, PWM_CHAN_B, value);
+  }
+}
+
 status_t configure_lcd()
 {
-  //set_sys_clock_khz(PLL_SYS_KHZ, true);
-  //clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, PLL_SYS_KHZ * 1000,
-  //    PLL_SYS_KHZ * 1000);
-  _gpio_set_mode(LCD_RST_PIN, 1);
-  _gpio_set_mode(LCD_CS_PIN, 1);
-  _gpio_set_mode(LCD_DC_PIN, 1);
-  _gpio_set_mode(LCD_BL_PIN, 1);
+  gpio_init(LCD_RST_PIN);
+  gpio_set_dir(LCD_RST_PIN, GPIO_OUT);
+  gpio_init(LCD_DC_PIN);
+  gpio_set_dir(LCD_DC_PIN, GPIO_OUT);
+  gpio_init(LCD_CS_PIN);
+  gpio_set_dir(LCD_CS_PIN, GPIO_OUT);
+  gpio_init(LCD_BL_PIN);
+  gpio_set_dir(LCD_BL_PIN, GPIO_OUT);
   gpio_put(LCD_CS_PIN, 1);
   gpio_put(LCD_DC_PIN, 0);
   gpio_put(LCD_BL_PIN, 1);
-  pwm_set_chan_level(slice_num, PWM_CHAN_B, 100);
+  /* adc_init(); */
+  /* adc_gpio_init(BAT_ADC_PIN); */
+  /* adc_select_input(BAR_CHANNEL); */
+  // PWM onfig
   gpio_set_function(LCD_BL_PIN, GPIO_FUNC_PWM);
   slice_num = pwm_gpio_to_slice_num(LCD_BL_PIN);
   pwm_set_wrap(slice_num, 100);

@@ -30,9 +30,9 @@ parameter:
 static void LCD_1IN28_SendCommand(uint8_t Reg)
 {
     gpio_put(LCD_DC_PIN, 0);
-    gpio_put(LCD_CS_PIN, 0);
+    // gpio_put(LCD_CS_PIN, 0);
     spi_write_blocking(LCD_SPI_PORT, &Reg, 1);
-    gpio_put(LCD_CS_PIN, 1);
+    // gpio_put(LCD_CS_PIN, 1);
 }
 
 /******************************************************************************

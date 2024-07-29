@@ -13,6 +13,8 @@
 #define LCD_MOSI_PIN (11)
 #define LCD_RST_PIN (12)
 #define LCD_BL_PIN (25)
+#define BAT_ADC_PIN (29)
+#define BAR_CHANNEL (3)
 
 #define LCD_1IN28_HEIGHT 240
 #define LCD_1IN28_WIDTH 240
@@ -25,6 +27,7 @@ enum _hw_config_pins {
   QMI_SCL_PIN = 7,
 };
 
+void hw_set_pwm(uint8_t value);
 status_t init_hardware();
 status_t deinit_hardware();
 status_t configure_hardware();
