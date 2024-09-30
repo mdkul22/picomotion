@@ -1,0 +1,3 @@
+add_library(calorie_estimator calorie_estimator.c)
+target_include_directories(calorie_estimator PUBLIC ${CMAKE_SOURCE_DIR}/lib/calorie_estimator)
+target_link_libraries(calorie_estimator qmi8658 hardware_gpio hardware_spi)

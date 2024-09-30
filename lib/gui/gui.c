@@ -10,9 +10,10 @@
 #include <src/lv_init.h>
 #include <src/misc/lv_color.h>
 
+#define BUFSIZE DISP_HOR_RES* DISP_VER_RES / 10
+
 static lv_display_t* display = NULL;
 static struct repeating_timer lvgl_timer;
-#define BUFSIZE DISP_HOR_RES* DISP_VER_RES / 10
 static uint16_t buf1[BUFSIZE]; /*Declare a buffer for 1/10 screen size*/
 static uint16_t buf2[BUFSIZE]; /*Declare a buffer for 1/10 screen size*/
 
